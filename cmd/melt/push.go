@@ -114,6 +114,15 @@ func sendDataFromFile(cmd *cobra.Command, dataFileName string) {
 					m.AddDataPoint(st.UnixNano(), et.UnixNano(), dp)
 					et = st
 				}
+			} else {
+				for _, dtp := range m.DataPoints {
+					if dtp.StartTime == 0 && dtp.EndTime == 0 {
+						st := et.Add(time.Minute * -1)
+						dtp.StartTime = st.UnixNano()
+						dtp.EndTime = et.UnixNano()
+						et = st
+					}
+				}
 			}
 		}
 		for _, l := range entity.Logs {
