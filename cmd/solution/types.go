@@ -256,6 +256,71 @@ func (manifest *Manifest) GetDashuiTemplates() []*DashuiTemplate {
 	return dashuiTemplates
 }
 
+func (manifest *Manifest) Validate() {
+	verErrors := make([]string, 0)
+
+	entities := manifest.GetFmmEntities()
+	metrics := manifest.GetFmmMetrics()
+	events := manifest.GetFmmMetrics()
+
+	for _, entity := range entities {
+		// verify entity name uniqueness
+		ec := 0
+		for _, ep := range entities {
+			if ep.Name == entity.Name {
+				ec++
+			}
+		}
+		if ec > 1 {
+			verErrors = append(verErrors, fmt.Sprintf("Entity name is not unique within the solution namespace: %s", entity.Name))
+		}
+
+		//verify there aren't any event types with the same name as the entity type
+		ec = 0
+		for _, event := range events {
+			if event.Name == entity.Name {
+				ec++
+			}
+		}
+		if ec > 0 {
+			verErrors = append(verErrors, fmt.Sprintf("There is an event type defined with the same name of the entity type within the solution namespace: %s", entity.Name))
+		}
+
+		// verify metricTypes references are valid within the solution namespace
+		ec = 0
+
+		for _, eMType := range entity.MetricTypes {
+			for _, metric := range metrics {
+				if metric.GetTypeName() == eMType {
+					ec++
+				}
+			}
+			if ec == 0 {
+				verErrors = append(verErrors, fmt.Sprintf("Metric type %s referenced by Entity type %s is not declared within the solution namespace", eMType, entity.Name))
+			}
+		}
+
+		// verify eventTypes references are valid within the solution namespace
+		ec = 0
+
+		for _, eEvType := range entity.EventTypes {
+			for _, event := range events {
+				if event.GetTypeName() == eEvType {
+					ec++
+				}
+			}
+			if ec == 0 {
+				verErrors = append(verErrors, fmt.Sprintf("Event type %s referenced by Entity type %s is not declared within the solution namespace", eEvType, entity.Name))
+			}
+		}
+
+	}
+	if len(verErrors) > 0 {
+		log.Fatalf("Solution Validation has found the following issues:  %v", verErrors)
+	}
+
+}
+
 func getDashuiTemplatesFromFile(filePath string) []*DashuiTemplate {
 	dashuiTemplates := make([]*DashuiTemplate, 0)
 	objDefFile := openFile(filePath)

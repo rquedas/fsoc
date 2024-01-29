@@ -64,8 +64,8 @@ type FmmEntity struct {
 	AssociationTypes      *FmmAssociationTypesTypeDef     `json:"associationTypes,omitempty"`
 }
 
-func (entity *FmmEntity) GetTypeName() string {
-	return fmt.Sprintf("%s:%s", entity.Namespace.Name, entity.Name)
+func (fmmType *FmmTypeDef) GetTypeName() string {
+	return fmt.Sprintf("%s:%s", fmmType.Namespace.Name, fmmType.Name)
 }
 
 type FmmEvent struct {
